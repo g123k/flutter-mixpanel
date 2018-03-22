@@ -1,0 +1,15 @@
+name: fluttermixpanel
+description: Flutter plugin for Mix Panel (analytics only)
+version: 0.0.1
+author: Edouard Marquez <moi@edouard-marquez.me>
+homepage: https://github.com/g123k/flutter-mixpanel
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+# The following section is specific to Flutter.
+flutter:
+  plugin:
+    androidPackage: fr.g123k.fluttermixpanel
+    pluginClass: FlutterMixPanelPlugin

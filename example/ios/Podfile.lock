@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - fluttermixpanel (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Pods/.symlinks/flutter/ios`)
+  - fluttermixpanel (from `Pods/.symlinks/plugins/fluttermixpanel/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Pods/.symlinks/flutter/ios
+  fluttermixpanel:
+    :path: Pods/.symlinks/plugins/fluttermixpanel/ios
+
+SPEC CHECKSUMS:
+  Flutter: 9d0fac939486c9aba2809b7982dfdbb47a7b0296
+  fluttermixpanel: 5c8cb0902bf129fc9402429cb3bec1dc9fb9cdcb
+
+PODFILE CHECKSUM: 793ca17cc5488c2bdeb7f2f95b973a070492cf02
+
+COCOAPODS: 1.4.0
