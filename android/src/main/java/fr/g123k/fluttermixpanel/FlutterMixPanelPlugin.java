@@ -13,9 +13,7 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
-import io.flutter.view.FlutterNativeView;
 
 /**
  * FlutterMixPanelPlugin
@@ -27,86 +25,70 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
     public static void registerWith(Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "g123k/fluttermixpanel");
         FlutterMixPanelPlugin plugin = new FlutterMixPanelPlugin(registrar.activity());
-        registrar.addViewDestroyListener(plugin.viewDestroyListener);
         channel.setMethodCallHandler(plugin);
     }
 
     private final Activity activity;
-    private final PluginRegistry.ViewDestroyListener viewDestroyListener;
-
-    private MixpanelAPI mixPanel;
-    private MixPanelPeople people;
 
     private FlutterMixPanelPlugin(Activity activity) {
         this.activity = activity;
-        this.viewDestroyListener = new PluginRegistry.ViewDestroyListener() {
-
-            @Override
-            public boolean onViewDestroy(FlutterNativeView flutterNativeView) {
-                if (mixPanel != null) {
-                    mixPanel.flush();
-                }
-                return true;
-            }
-        };
     }
 
     @Override
     public void onMethodCall(MethodCall call, Result result) {
-        if (mixPanel == null && call.hasArgument("token")) {
-            initMixPanel(call.argument("token").toString());
-        }
+        MixpanelAPI mixPanel;
+        MixPanelPeople people;
 
-        if (mixPanel == null) {
-            result.error("NOT_INITIALIZED", "Please initialized the Mixpanel API first with a valid token", null);
+        if (call.hasArgument("token")) {
+            mixPanel = MixpanelAPI.getInstance(activity, call.argument("token").toString());
+            people = new MixPanelPeople(mixPanel.getPeople());
+        } else {
+            result.error("NOT_INITIALIZED", "Please initialize the Mixpanel API first with a valid token", null);
             return;
         }
 
         if (call.method.startsWith("people/")) {
             people.onMethodCall(call, result);
         } else if (call.method.equals("track")) {
-            track(call, result);
+            track(mixPanel, call, result);
         } else if (call.method.equals("track_map")) {
-            trackMap(call, result);
+            trackMap(mixPanel, call, result);
         } else if (call.method.equals("track_json")) {
-            trackJSON(call, result);
+            trackJSON(mixPanel, call, result);
         } else if (call.method.equals("timeEvent")) {
-            timeEvent(call, result);
+            timeEvent(mixPanel, call, result);
         } else if (call.method.equals("identify")) {
-            identify(call, result);
+            identify(mixPanel, call, result);
         } else if (call.method.equals("get_distinct_id")) {
-            getDistinctId(result);
+            getDistinctId(mixPanel, result);
         } else if (call.method.equals("event_elapsed_time")) {
-            eventElapsedTime(call, result);
+            eventElapsedTime(mixPanel, call, result);
         } else if (call.method.equals("alias")) {
-            alias(call, result);
+            alias(mixPanel, call, result);
         } else if (call.method.equals("register_super_properties_json")) {
-            registerSuperPropertiesJSON(call, result);
+            registerSuperPropertiesJSON(mixPanel, call, result);
         } else if (call.method.equals("register_super_properties_map")) {
-            registerSuperPropertiesMap(call, result);
+            registerSuperPropertiesMap(mixPanel, call, result);
         } else if (call.method.equals("register_super_properties_once_json")) {
-            registerSuperPropertiesOnceJSON(call, result);
+            registerSuperPropertiesOnceJSON(mixPanel, call, result);
         } else if (call.method.equals("register_super_properties_once_map")) {
-            registerSuperPropertiesOnceMap(call, result);
+            registerSuperPropertiesOnceMap(mixPanel, call, result);
         } else if (call.method.equals("unregister_super_property")) {
-            unregisterSuperProperty(call, result);
+            unregisterSuperProperty(mixPanel, call, result);
         } else if (call.method.equals("clear_super_properties")) {
-            clearSuperProperties(result);
+            clearSuperProperties(mixPanel, result);
         } else if (call.method.equals("reset")) {
-            reset(result);
+            reset(mixPanel, result);
         } else if (call.method.equals("flush")) {
-            flush(result);
+            flush(mixPanel, result);
         } else {
             result.notImplemented();
         }
+
+        mixPanel.flush();
     }
 
-    private void initMixPanel(String token) {
-        mixPanel = MixpanelAPI.getInstance(activity, token);
-        people = new MixPanelPeople(mixPanel.getPeople());
-    }
-
-    private void track(MethodCall call, Result result) {
+    private void track(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("event_name")) {
             result.error("ERROR", "The event name argument is missing!", null);
             return;
@@ -116,7 +98,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         result.success(null);
     }
 
-    private void trackMap(MethodCall call, Result result) {
+    private void trackMap(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("event_name")) {
             result.error("ERROR", "The event name argument is missing!", null);
             return;
@@ -134,7 +116,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         }
     }
 
-    private void trackJSON(MethodCall call, Result result) {
+    private void trackJSON(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("event_name")) {
             result.error("ERROR", "The event name argument is missing!", null);
             return;
@@ -152,7 +134,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         }
     }
 
-    private void timeEvent(MethodCall call, Result result) {
+    private void timeEvent(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("event_name")) {
             result.error("ERROR", "The event name argument is missing!", null);
         }
@@ -161,7 +143,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         result.success(null);
     }
 
-    private void identify(MethodCall call, Result result) {
+    private void identify(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("distinct_id")) {
             result.error("ERROR", "The distinct id argument is missing!", null);
         }
@@ -170,11 +152,11 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         result.success(null);
     }
 
-    private void getDistinctId(Result result) {
+    private void getDistinctId(MixpanelAPI mixPanel, Result result) {
         result.success(mixPanel.getDistinctId());
     }
 
-    private void eventElapsedTime(MethodCall call, Result result) {
+    private void eventElapsedTime(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("event_name")) {
             result.error("ERROR", "The event name argument is missing!", null);
         }
@@ -182,7 +164,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         result.success(mixPanel.eventElapsedTime(call.argument("event_name").toString()));
     }
 
-    private void alias(MethodCall call, Result result) {
+    private void alias(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("alias") && !call.hasArgument("original")) {
             result.error("ERROR", "Alias and/or original is/are missing", null);
         }
@@ -191,7 +173,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         result.success(null);
     }
 
-    private void registerSuperPropertiesJSON(MethodCall call, Result result) {
+    private void registerSuperPropertiesJSON(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("super_properties_json")) {
             result.error("ERROR", "The super properties json argument is missing!", null);
             return;
@@ -206,7 +188,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         }
     }
 
-    private void registerSuperPropertiesMap(MethodCall call, Result result) {
+    private void registerSuperPropertiesMap(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("super_properties_map")) {
             result.error("ERROR", "The super properties map argument is missing!", null);
             return;
@@ -221,7 +203,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         }
     }
 
-    private void registerSuperPropertiesOnceJSON(MethodCall call, Result result) {
+    private void registerSuperPropertiesOnceJSON(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("super_properties_json")) {
             result.error("ERROR", "The super properties JSON argument is missing!", null);
             return;
@@ -236,7 +218,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         }
     }
 
-    private void registerSuperPropertiesOnceMap(MethodCall call, Result result) {
+    private void registerSuperPropertiesOnceMap(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("super_properties_map")) {
             result.error("ERROR", "Super properties map argument is missing!", null);
             return;
@@ -251,7 +233,7 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         }
     }
 
-    private void unregisterSuperProperty(MethodCall call, Result result) {
+    private void unregisterSuperProperty(MixpanelAPI mixPanel, MethodCall call, Result result) {
         if (!call.hasArgument("prop")) {
             result.error("ERROR", "The super property argument is missing!", null);
         }
@@ -260,17 +242,17 @@ public class FlutterMixPanelPlugin implements MethodCallHandler {
         result.success(null);
     }
 
-    private void clearSuperProperties(Result result) {
+    private void clearSuperProperties(MixpanelAPI mixPanel, Result result) {
         mixPanel.clearSuperProperties();
         result.success(null);
     }
 
-    private void reset(Result result) {
+    private void reset(MixpanelAPI mixPanel, Result result) {
         mixPanel.reset();
         result.success(null);
     }
 
-    private void flush(Result result) {
+    private void flush(MixpanelAPI mixPanel, Result result) {
         mixPanel.flush();
         result.success(null);
     }

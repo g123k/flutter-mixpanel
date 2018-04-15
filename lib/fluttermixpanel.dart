@@ -3,17 +3,17 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-class MixpanelAPI {
+class Mixpanel {
   _Channel _channel;
-  String _token;
+  String token;
   MixpanelPeople _people;
 
-  MixpanelAPI(this._token) {
+  Mixpanel(this.token) : assert(token != null && token.trim().length > 0) {
     if (token == null || token.trim().length == 0) {
       throw new Exception('The token can not be empty!');
     }
-    _token = token;
-    _channel = new _Channel(_token);
+    token = token;
+    _channel = new _Channel(token);
     _people = new MixpanelPeople._init(_channel);
   }
 
@@ -113,8 +113,6 @@ class MixpanelAPI {
     await _invokeMethod('flush');
     return null;
   }
-
-  String get token => _token;
 
   MixpanelPeople get people => _people;
 
@@ -247,10 +245,11 @@ class MixpanelPeople {
 }
 
 class _Channel {
-  final MethodChannel _channel = const MethodChannel('g123k/fluttermixpanel');
+  final MethodChannel _channel;
   final String _token;
 
-  _Channel(this._token);
+  _Channel(this._token)
+      : _channel = const MethodChannel('g123k/fluttermixpanel');
 
   Future<dynamic> _invokeMethod(String method, {Map<String, Object> args}) {
     if (args == null) {

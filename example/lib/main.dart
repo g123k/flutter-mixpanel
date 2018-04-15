@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:fluttermixpanel/fluttermixpanel.dart';
 
 void main() => runApp(new MyApp());
@@ -17,11 +16,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   initPlatformState() async {
-    MixpanelAPI mixPanel = new MixpanelAPI("<your token>");
-    String distinctId = await mixPanel.people.getDistinctId();
-    print(distinctId);
+    Mixpanel mixPanel = new Mixpanel("<your token>");
 
-    await mixPanel.trackJSON("toto", '{"toto":"toto","titi":"titi"}');
+    await mixPanel.track("track");
+    await mixPanel.trackJSON("json", '{"toto":"toto","titi":"titi"}');
+    await mixPanel.trackMap("map", {"toto": "toto", "titi": "titi"});
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
