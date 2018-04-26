@@ -64,9 +64,14 @@ public class SwiftFluttermixpanelPlugin: NSObject, FlutterPlugin {
             return
         }
         
-        let props = propertiesMap as! Dictionary<String, String>
+        let props = propertiesMap as! Dictionary<String, Any>
+        var map = [String: MixpanelType]()
         
-        mixpanel.track(event: eventName, properties: props)
+        for (key, value) in props {
+            map[key] = value as? MixpanelType;
+        }
+        
+        mixpanel.track(event: eventName, properties: map)
         result(nil)
     }
     
